@@ -16,11 +16,11 @@ build:
 
 requirements:
   host:
-    - python
+    - python 2.7|>=3.4
     - pip
 
   run:
-    - python
+    - python  2.7|>=3.4
     - regex >=2017.02.08
     - python-dateutil >=2.4.2
     - pytz
