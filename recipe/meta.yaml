@@ -1,5 +1,5 @@
 {% set name = "datefinder" %}
-{% set version = "0.7.3" %}
+{% set version = "1.0.0" %}
 
 package:
   name: {{ name|lower }}
@@ -7,10 +7,10 @@ package:
 
 source:
   url: https://github.com/akoumjian/datefinder/archive/v{{ version }}.tar.gz
-  sha256: c0eec1097d05c793892c46465206c23f87eb1419a683c2fad587cad89be61a31
+  sha256: 53a7d36f98d2ee9ad35f7327f252b252f21e413a301d2f88d4f44012b15f8237
 
 build:
-  number: 1
+  number: 0
   script: {{ PYTHON }} -m pip install . -vv
   noarch: python
 
