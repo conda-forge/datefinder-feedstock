@@ -1,11 +1,10 @@
 schema_version: 1
 
 context:
-  name: datefinder
   version: "1.0.0"
 
 package:
-  name: ${{ name|lower }}
+  name: datefinder
   version: ${{ version }}
 
 source:
@@ -14,15 +13,28 @@ source:
 
 build:
   number: 0
-  noarch: python
-  script: ${{ PYTHON }} -m pip install . -vv
+  skip: is_abi3 and not is_python_min
+  script:
+    - cargo-bundle-licenses --format yaml --output THIRDPARTY.yml
+    - ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  python:
+    entry_points:
+      - datefinder = datefinder.cli:main
+    version_independent: ${{ is_abi3 }}
 
 requirements:
+  build:
+    - ${{ compiler('rust') }}
+    - ${{ stdlib("c") }}
+    - cargo-bundle-licenses
   host:
-    - python ${{ python_min }}.*
+    - if: is_abi3
+      then: python-abi3
+    - python
     - pip
+    - maturin >=1.8,<1.12
   run:
-    - python >=${{ python_min }}
+    - python
     - regex >=2017.02.08
     - python-dateutil >=2.4.2
     - pytz
@@ -33,13 +45,26 @@ tests:
         - datefinder
       pip_check: true
       python_version:
-        - ${{ python_min }}.*
+        - if: is_abi3
+          then: ${{ python_min }}.*
         - "*"
+  - requirements:
+      run:
+        - python
+        - if: is_abi3
+          then: abi3audit
+    script:
+      - datefinder --help
+      - if: is_abi3
+        then:
+          - if: unix
+            then: abi3audit $SP_DIR/datefinder/_kernel.abi3.so -s -v --assume-minimum-abi3 ${{ python_min }}
+            else: abi3audit %SP_DIR%/datefinder/_kernel.pyd -s -v --assume-minimum-abi3 ${{ python_min }}
 
 about:
+  summary: Extract datetime objects from natural language text
   license: MIT
   license_file: LICENSE
-  summary: A python module for locating dates inside text.
   homepage: https://github.com/akoumjian/datefinder
   repository: https://github.com/akoumjian/datefinder
   documentation: https://github.com/akoumjian/datefinder
