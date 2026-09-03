@@ -51,10 +51,15 @@ tests:
   - requirements:
       run:
         - python
+        - pytest
         - if: is_abi3
           then: abi3audit
+    files:
+      source:
+        - tests/
     script:
       - datefinder --help
+      - pytest
       - if: is_abi3
         then:
           - if: unix
