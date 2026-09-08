@@ -1,0 +1,80 @@
+schema_version: 1
+
+context:
+  version: "1.0.0"
+
+package:
+  name: datefinder
+  version: ${{ version }}
+
+source:
+  url: https://github.com/akoumjian/datefinder/archive/v${{ version }}.tar.gz
+  sha256: 53a7d36f98d2ee9ad35f7327f252b252f21e413a301d2f88d4f44012b15f8237
+
+build:
+  number: 0
+  skip: is_abi3 and not is_python_min
+  script:
+    - cargo-bundle-licenses --format yaml --output THIRDPARTY.yml
+    - ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  python:
+    entry_points:
+      - datefinder = datefinder.cli:main
+    version_independent: ${{ is_abi3 }}
+
+requirements:
+  build:
+    - ${{ compiler('rust') }}
+    - ${{ stdlib("c") }}
+    - cargo-bundle-licenses
+  host:
+    - if: is_abi3
+      then: python-abi3
+    - python
+    - pip
+    - maturin >=1.8,<1.12
+  run:
+    - python
+    - regex >=2017.02.08
+    - python-dateutil >=2.4.2
+    - pytz
+
+tests:
+  - python:
+      imports:
+        - datefinder
+      pip_check: true
+      python_version:
+        - if: is_abi3
+          then: ${{ python_min }}.*
+        - "*"
+  - requirements:
+      run:
+        - python
+        - pytest
+        - if: is_abi3
+          then: abi3audit
+    files:
+      source:
+        - tests/
+    script:
+      - datefinder --help
+      - pytest
+      - if: is_abi3
+        then:
+          - if: unix
+            then: abi3audit $SP_DIR/datefinder/_kernel.abi3.so -s -v --assume-minimum-abi3 ${{ python_min }}
+            else: abi3audit %SP_DIR%/datefinder/_kernel.pyd -s -v --assume-minimum-abi3 ${{ python_min }}
+
+about:
+  summary: Extract datetime objects from natural language text
+  license: MIT
+  license_file: LICENSE
+  homepage: https://github.com/akoumjian/datefinder
+  repository: https://github.com/akoumjian/datefinder
+  documentation: https://github.com/akoumjian/datefinder
+
+extra:
+  recipe-maintainers:
+    - kellend-git
+    - mgorny
